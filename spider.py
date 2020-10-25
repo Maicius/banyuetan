@@ -4,7 +4,11 @@ import re
 import datetime
 from PyPDF2 import PdfFileReader, PdfFileWriter
 import os
-
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("-pdfkit", type=str, default="/usr/local/bin/wkhtmltopdf")
+parser.add_argument("-url", type=str, default="https://mp.weixin.qq.com/s/i9JfkYZUY2WD3eRz2Md8vg")
+parser.add_argument("-count", type=int, default=1000)
 class banyuetan():
     req = requests.Session()
     pdf_tool = '/usr/local/bin/wkhtmltopdf'
@@ -22,8 +26,12 @@ class banyuetan():
     last_year_stamp = last_year.replace(tzinfo=datetime.timezone.utc).timestamp()
 
     answers_style = 'display: inline-block;width: 100%;vertical-align: top;overflow: hidden;align-self: flex-start;font-family: -apple-system-font, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;letter-spacing: 0.034em;box-sizing: border-box;'
-    def __init__(self, index = 0):
-        self.index = index
+    def __init__(self, pdfkit, url, count, combine_only = False):
+        self.index = 0
+        self.count = count
+        self.url = url
+        self.pdf_tool = pdfkit
+        self.combine_only = combine_only
 
     def create_pdf(self):
         while self.index < self.count:
@@ -60,11 +68,12 @@ class banyuetan():
             self.url = next_href
             self.index += 1
     def run(self):
-        try:
-            self.create_pdf()
-        except BaseException as e:
-            print(e)
-            print("爬虫结束，开始合并pdf...")
+        if not self.combine_only:
+            try:
+                self.create_pdf()
+            except BaseException as e:
+                print(e)
+                print("爬虫结束，开始合并pdf...")
         self.combine_all_pdf()
 
     def combine_all_pdf(self):
@@ -81,5 +90,9 @@ class banyuetan():
 
 
 if __name__ =='__main__':
-    ban = banyuetan()
+    args = parser.parse_args()
+    pdfkit = args.pdfkit
+    url = args.url
+    count = args.count
+    ban = banyuetan(pdfkit=pdfkit, url=url, count=count)
     ban.run()

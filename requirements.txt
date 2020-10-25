@@ -1,0 +1,3 @@
+pdfkit
+PyPDF2
+requests
